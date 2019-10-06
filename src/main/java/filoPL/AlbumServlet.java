@@ -1,37 +1,45 @@
 package filoPL;
 
-import java.io.Serializable;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class AlbumServlet implements Serializable {
-    private String title;
-    private String author;
-    private int year;
+@WebServlet(value = "/")
+public class AlbumServlet extends HttpServlet {
 
-    public String getTitle() {
-        return title;
+    protected void doGet(HttpServlet req, HttpServlet resp) throws ServletException, IOException {
+
+        if (req.getSession().getAttribute("albums") == null) {
+            req.getSession().setAttribute("albums", new ArrayList<Album>());
+        }
+
+        getServletContext().getRequestDispatcher("/albums.jsp").forward(req, resp);
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String title = req.getParameter("title");
+        String author = req.getParameter("author");
+        Integer year = null;
 
-    public String getAuthor() {
-        return author;
-    }
+        try {
+            year = Integer.valueOf(req.getParameter("year"));
+        } catch (NumberFormatException e) {
+            System.out.println("Dane niepoprawne");
+        }
 
-    public void setAuthor(String author) {
-        this.author = author;
-    }
+        Album album = new Album(title, author, year);
 
-    public int getYear() {
-        return year;
-    }
-
-    public void setYear(int year) {
-        this.year = year;
-    }
-
-    public boolean isValid() {
-        return 0;
+        if (album.isValid()){
+            List<Album> albums = (List<Album>)req.getSession().getAttribute("albums");
+            albums.add(album);
+        } else {
+            req.setAttribute("error", true);
+        }
+        getServletContext().getRequestDispatcher("/albums.jsp").forward(req, resp);
     }
 }
